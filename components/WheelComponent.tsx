@@ -54,20 +54,20 @@ export const WheelComponent: React.FC<WheelComponentProps> = ({ onSpinEnd, isSpi
   }, [isSpinning]);
 
   return (
-    // Increased standard size from w-80 to w-[340px] and md size to w-[500px]
-    <div className="relative w-[340px] h-[340px] md:w-[500px] md:h-[500px] flex items-center justify-center my-4 scale-100 transition-transform duration-500">
+    // Responsive sizes: Mobile (280px), Tablet (400px), XL Desktop (550px)
+    <div className="relative w-[280px] h-[280px] md:w-[400px] md:h-[400px] xl:w-[550px] xl:h-[550px] flex items-center justify-center my-2 md:my-4 scale-100 transition-transform duration-500">
       
       {/* 
         POINTER (The Flapper) 
         Located at the top center. 
       */}
-      <div className="absolute -top-5 left-1/2 transform -translate-x-1/2 z-30 filter drop-shadow-xl">
+      <div className="absolute -top-4 md:-top-5 left-1/2 transform -translate-x-1/2 z-30 filter drop-shadow-xl">
         {/* The metallic housing for the pointer */}
-        <div className="w-14 h-14 bg-gradient-to-b from-gray-200 to-gray-400 rounded-full border-4 border-white shadow-md flex items-center justify-center relative">
-            <div className="w-8 h-8 bg-coke-red rounded-full border-2 border-red-800 shadow-inner"></div>
+        <div className="w-10 h-10 md:w-14 md:h-14 bg-gradient-to-b from-gray-200 to-gray-400 rounded-full border-2 md:border-4 border-white shadow-md flex items-center justify-center relative">
+            <div className="w-6 h-6 md:w-8 md:h-8 bg-coke-red rounded-full border border-red-800 shadow-inner"></div>
         </div>
-        {/* The actual needle - slightly larger */}
-        <div className="absolute top-10 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-t-[32px] border-t-coke-red filter drop-shadow-sm"></div>
+        {/* The actual needle */}
+        <div className="absolute top-8 md:top-10 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[10px] md:border-l-[16px] border-l-transparent border-r-[10px] md:border-r-[16px] border-r-transparent border-t-[20px] md:border-t-[32px] border-t-coke-red filter drop-shadow-sm"></div>
       </div>
 
       {/* 
@@ -75,10 +75,10 @@ export const WheelComponent: React.FC<WheelComponentProps> = ({ onSpinEnd, isSpi
       */}
       
       {/* 1. Outer Chrome Rim */}
-      <div className="absolute inset-[-16px] rounded-full bg-gradient-to-br from-gray-300 via-white to-gray-400 border border-gray-400 shadow-2xl"></div>
+      <div className="absolute inset-[-10px] md:inset-[-16px] rounded-full bg-gradient-to-br from-gray-300 via-white to-gray-400 border border-gray-400 shadow-2xl"></div>
       
       {/* 2. Dark Gap/Housing */}
-      <div className="absolute inset-[-8px] rounded-full bg-coke-black border border-gray-700"></div>
+      <div className="absolute inset-[-4px] md:inset-[-8px] rounded-full bg-coke-black border border-gray-700"></div>
 
       {/* 3. Inner Red Ring (The Wheel Base) */}
       <div className="absolute inset-0 rounded-full bg-coke-red shadow-inner"></div>
@@ -108,20 +108,20 @@ export const WheelComponent: React.FC<WheelComponentProps> = ({ onSpinEnd, isSpi
                 
                 {/* Text Label */}
                 <div 
-                    className="absolute top-0 left-0 w-full h-full flex justify-center pt-4 md:pt-6"
+                    className="absolute top-0 left-0 w-full h-full flex justify-center pt-3 md:pt-6"
                     style={{ transform: `rotate(${centerRotation}deg)` }}
                 >
                      <span 
-                        className="font-black tracking-tighter select-none drop-shadow-sm text-lg md:text-3xl"
+                        className="font-black tracking-tighter select-none drop-shadow-sm text-sm md:text-2xl xl:text-4xl"
                         style={{
                             color: sector.textColor,
                             writingMode: 'vertical-rl', 
                             textOrientation: 'upright',
-                            height: '55%', // Allowed more height for text to fit larger font
+                            height: '55%',
                             display: 'flex',
                             alignItems: 'center', 
                             justifyContent: 'flex-start',
-                            textShadow: sector.textColor === '#FFFFFF' ? '0 2px 4px rgba(0,0,0,0.6)' : 'none',
+                            textShadow: sector.textColor === '#FFFFFF' ? '0 1px 2px rgba(0,0,0,0.6)' : 'none',
                             fontFamily: "'Arial Black', 'Helvetica Black', sans-serif"
                         }}
                      >
@@ -135,17 +135,16 @@ export const WheelComponent: React.FC<WheelComponentProps> = ({ onSpinEnd, isSpi
       
       {/* 
         CENTER HUB 
-        Larger to match new wheel size
       */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20">
-          <div className="relative w-28 h-28 md:w-36 md:h-36 rounded-full bg-gradient-to-br from-gray-100 to-gray-300 shadow-[0_5px_15px_rgba(0,0,0,0.5)] flex items-center justify-center border-4 border-gray-400">
+          <div className="relative w-20 h-20 md:w-36 md:h-36 rounded-full bg-gradient-to-br from-gray-100 to-gray-300 shadow-[0_5px_15px_rgba(0,0,0,0.5)] flex items-center justify-center border-2 md:border-4 border-gray-400">
               {/* Inner Red Button */}
-              <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-coke-red to-coke-darkRed rounded-full border-2 border-white/30 shadow-inner flex items-center justify-center">
-                  <span className="text-white font-serif italic font-bold text-xl md:text-2xl drop-shadow-md">Coke</span>
+              <div className="w-14 h-14 md:w-24 md:h-24 bg-gradient-to-br from-coke-red to-coke-darkRed rounded-full border border-white/30 shadow-inner flex items-center justify-center">
+                  <span className="text-white font-serif italic font-bold text-sm md:text-2xl drop-shadow-md">Coke</span>
               </div>
               
               {/* Gloss shine */}
-              <div className="absolute top-2 left-4 right-4 h-10 bg-white/40 rounded-full blur-[2px]"></div>
+              <div className="absolute top-2 left-4 right-4 h-6 md:h-10 bg-white/40 rounded-full blur-[2px]"></div>
           </div>
       </div>
 
