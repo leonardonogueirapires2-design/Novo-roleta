@@ -10,11 +10,13 @@ export interface Player {
   score: number;
 }
 
-export enum WheelSectorType {
-  POINT = 'POINT',
-  BANKRUPT = 'BANKRUPT',
-  PASS = 'PASS',
-}
+export const WheelSectorType = {
+  POINT: 'POINT',
+  BANKRUPT: 'BANKRUPT',
+  PASS: 'PASS',
+} as const;
+
+export type WheelSectorType = typeof WheelSectorType[keyof typeof WheelSectorType];
 
 export interface WheelSector {
   label: string;
@@ -24,8 +26,10 @@ export interface WheelSector {
   textColor: string;
 }
 
-export enum GamePhase {
-  SPINNING,
-  GUESSING,
-  SOLVED
-}
+export const GamePhase = {
+  SPINNING: 0,
+  GUESSING: 1,
+  SOLVED: 2
+} as const;
+
+export type GamePhase = typeof GamePhase[keyof typeof GamePhase];
