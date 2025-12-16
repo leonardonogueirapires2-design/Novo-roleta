@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Settings } from 'lucide-react';
 import { INITIAL_PUZZLES } from './constants';
 import { GamePhase, Player, Puzzle, WheelSector, WheelSectorType } from './types';
+import { soundManager } from './utils/SoundManager';
 
 // Components
 import { PlayerCard } from './components/PlayerCard';
@@ -13,9 +14,9 @@ import { GuessWordModal } from './components/GuessWordModal';
 import { TurnNotification, NotificationType } from './components/TurnNotification';
 
 const INITIAL_PLAYERS: Player[] = [
-  { id: 1, name: 'Jogador 1', score: 0 },
-  { id: 2, name: 'Jogador 2', score: 0 },
-  { id: 3, name: 'Jogador 3', score: 0 },
+  { id: 1, name: 'Jog. 1', score: 0 },
+  { id: 2, name: 'Jog. 2', score: 0 },
+  { id: 3, name: 'Jog. 3', score: 0 },
 ];
 
 export default function App() {
@@ -86,6 +87,9 @@ export default function App() {
     setIsWheelSpinning(false);
 
     if (sector.type === WheelSectorType.BANKRUPT) {
+      // Audio
+      soundManager.play('BANKRUPT');
+
       // 1. Reset Score
       setPlayers(prev => prev.map(p => 
         p.id === activePlayer.id ? { ...p, score: 0 } : p
@@ -105,6 +109,9 @@ export default function App() {
       }, 5000);
 
     } else if (sector.type === WheelSectorType.PASS) {
+      // Audio
+      soundManager.play('BANKRUPT'); // Reusing fail sound or could be separate
+
       // 1. Show Notification
       setNotification({
         isOpen: true,
@@ -140,6 +147,8 @@ export default function App() {
 
     if (count > 0) {
       // Correct
+      soundManager.play('CORRECT');
+
       const points = (currentWheelValue || 0) * count;
       handleScoreUpdate(activePlayer.id, points);
       setLastWheelAction(`Acertou! Letra ${letter} apareceu ${count}x (+${points}). Gire novamente ou chute.`);
@@ -149,6 +158,7 @@ export default function App() {
       const allGuessed = Array.from(distinctLetters).every(l => newGuessed.has(l));
       
       if (allGuessed) {
+        soundManager.play('WIN');
         setGamePhase(GamePhase.SOLVED);
         setLastWheelAction(`PARABÉNS! ${activePlayer.name} resolveu a palavra!`);
       } else {
@@ -157,6 +167,7 @@ export default function App() {
 
     } else {
       // Incorrect Letter
+      soundManager.play('WRONG');
       setLastWheelAction(`Letra ${letter} não existe.`);
       
       setNotification({
@@ -182,6 +193,8 @@ export default function App() {
 
     if (normalizedGuess === normalizedPhrase) {
         // Correct Guess
+        soundManager.play('WIN');
+        
         // 1. Reveal all letters
         const allLetters = new Set(normalizedPhrase.split('').filter(c => /[A-Z]/.test(c)));
         setGuessedLetters(allLetters);
@@ -191,6 +204,7 @@ export default function App() {
         setLastWheelAction(`INCRÍVEL! ${activePlayer.name} acertou a palavra inteira!`);
     } else {
         // Incorrect Word Guess
+        soundManager.play('WRONG');
         setLastWheelAction(`"${guess}" está errado!`);
         
         setNotification({
@@ -207,18 +221,22 @@ export default function App() {
   };
 
   const handleAdminAddPuzzle = (p: Puzzle) => {
+    soundManager.play('CLICK');
     setPuzzleQueue([...puzzleQueue, p]);
   };
 
   const handleAdminDeletePuzzle = (id: string) => {
+    soundManager.play('CLICK');
     setPuzzleQueue(prev => prev.filter(p => p.id !== id));
   };
   
   const handleAdminClearQueue = () => {
+    soundManager.play('CLICK');
     setPuzzleQueue([]);
   };
 
   const handleStartGameQueue = () => {
+    soundManager.play('CLICK');
     if (puzzleQueue.length > 0) {
         loadPuzzle(puzzleQueue[0].id);
         setIsAdminOpen(false);
@@ -226,7 +244,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen font-sans overflow-x-hidden flex flex-col relative">
+    <div className="min-h-screen font-sans overflow-x-hidden flex flex-col relative pb-10">
       {/* Background Bubbles */}
       <div className="bubbles">
         <div className="bubble"></div>
@@ -241,44 +259,44 @@ export default function App() {
         <div className="bubble"></div>
       </div>
 
-      {/* Header with "Coke Wave" feel */}
-      <header className="relative z-40 bg-coke-darkRed/80 backdrop-blur-md shadow-2xl pt-4 pb-8">
-        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
-            <div className="flex items-center gap-4">
-                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-gray-200">
-                     {/* Simplified Cap Icon */}
-                    <div className="w-10 h-10 rounded-full border-2 border-dashed border-coke-red bg-coke-red flex items-center justify-center">
-                         <span className="text-white font-serif italic font-bold text-xs">Coke</span>
+      {/* Header */}
+      <header className="relative z-40 bg-coke-darkRed/80 backdrop-blur-md shadow-2xl pt-2 pb-4 md:pt-4 md:pb-6">
+        <div className="max-w-[1400px] mx-auto px-4 flex justify-between items-center">
+            <div className="flex items-center gap-2 md:gap-4">
+                <div className="w-10 h-10 md:w-14 md:h-14 bg-white rounded-full flex items-center justify-center shadow-lg border-2 md:border-4 border-gray-200">
+                    <div className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-dashed border-coke-red bg-coke-red flex items-center justify-center">
+                         <span className="text-white font-serif italic font-bold text-[8px] md:text-xs">Coke</span>
                     </div>
                 </div>
-                <div className="flex flex-col">
-                    <h1 className="text-3xl md:text-4xl font-black italic tracking-tighter text-white drop-shadow-md">
+                <div className="flex flex-col leading-tight">
+                    <h1 className="text-xl md:text-4xl font-black italic tracking-tighter text-white drop-shadow-md">
                         RODA COCA-COLA
                     </h1>
-                    <span className="text-white/80 text-sm font-bold tracking-widest uppercase">Sabor Real. Magia Real.</span>
+                    <span className="hidden md:block text-white/80 text-sm font-bold tracking-widest uppercase">Sabor Real. Magia Real.</span>
                 </div>
             </div>
             <button 
-            onClick={() => setIsAdminOpen(true)}
-            className="p-3 bg-black/20 hover:bg-black/40 rounded-full transition-all text-white border border-white/20 shadow-inner"
+            onClick={() => {
+                soundManager.play('CLICK');
+                setIsAdminOpen(true);
+            }}
+            className="p-2 md:p-3 bg-black/20 hover:bg-black/40 rounded-full transition-all text-white border border-white/20 shadow-inner"
             >
-            <Settings size={24} />
+            <Settings size={20} className="md:w-6 md:h-6" />
             </button>
         </div>
-        
-        {/* The Wave Decoration using SVG or gradient */}
-        <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 flex flex-col gap-8 relative z-10">
+      <main className="flex-1 max-w-[1600px] mx-auto w-full p-2 md:p-6 flex flex-col gap-6 relative z-10">
         
-        {/* Top Section: Puzzle & Wheel */}
-        <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start mt-6">
+        {/* Horizontal Layout Container for Large Screens */}
+        <div className="flex flex-col xl:flex-row gap-6 items-center xl:items-start">
           
-          {/* Wheel Section (Left on Desktop) */}
-          <div className="flex flex-col items-center gap-6">
-             {/* Wheel Container with specific glass effect */}
+          {/* LEFT: Wheel Section (Fixed Width on Desktop) */}
+          <div className="flex flex-col items-center gap-4 xl:sticky xl:top-6 shrink-0">
+             
+             {/* Wheel Container */}
              <div className="relative">
                  <WheelComponent 
                     onSpinEnd={handleSpinEnd} 
@@ -287,52 +305,56 @@ export default function App() {
                  />
              </div>
              
-             <div className="flex flex-col gap-3 w-full max-w-xs relative z-20">
+             {/* Controls Container - Responsive Width */}
+             <div className="flex flex-row xl:flex-col gap-2 w-full max-w-[320px] md:max-w-md xl:max-w-xs relative z-20">
                 {/* Spin Button */}
                 <button
                     onClick={handleSpinStart}
                     disabled={gamePhase !== GamePhase.SPINNING || isWheelSpinning}
                     className={`
-                        w-full py-4 rounded-full font-black text-2xl shadow-xl transition-all transform hover:scale-105 active:scale-95 border-4
+                        flex-1 py-3 md:py-4 rounded-xl font-black text-lg md:text-2xl shadow-xl transition-all transform hover:scale-[1.02] active:scale-95 border-2 md:border-4
                         ${gamePhase === GamePhase.SPINNING && !isWheelSpinning
-                            ? 'bg-yellow-400 text-coke-red border-white hover:bg-yellow-300 cursor-pointer ring-4 ring-yellow-500/30'
+                            ? 'bg-yellow-400 text-coke-red border-white hover:bg-yellow-300 cursor-pointer ring-2 ring-yellow-500/30'
                             : 'bg-gray-800 text-gray-500 border-gray-600 cursor-not-allowed opacity-50 grayscale'
                         }
                     `}
                 >
-                    {isWheelSpinning ? 'GIRANDO...' : 'GIRAR'}
+                    {isWheelSpinning ? '...' : 'GIRAR'}
                 </button>
                 
                 {/* Guess Button */}
                 <button
-                    onClick={() => setIsGuessModalOpen(true)}
+                    onClick={() => {
+                        soundManager.play('CLICK');
+                        setIsGuessModalOpen(true);
+                    }}
                     disabled={gamePhase === GamePhase.SOLVED || isWheelSpinning}
                     className={`
-                        w-full py-3 rounded-full font-bold text-sm shadow-lg transition-all border-2 backdrop-blur-sm
+                        flex-1 py-3 rounded-xl font-bold text-xs md:text-sm shadow-lg transition-all border-2 backdrop-blur-sm
                         ${gamePhase !== GamePhase.SOLVED && !isWheelSpinning
                              ? 'bg-white/90 text-coke-red border-white hover:bg-white'
                              : 'bg-black/20 text-white/40 border-white/10 cursor-not-allowed'
                         }
                     `}
                 >
-                    CHUTAR PALAVRA COMPLETA
+                    CHUTAR TUDO
                 </button>
              </div>
 
              {/* Action Status Panel (Glass) */}
-             <div className="glass-panel text-white px-8 py-4 rounded-2xl text-center font-bold shadow-2xl max-w-md w-full min-h-[4rem] flex items-center justify-center border-t border-l border-white/40">
-                <span className="text-xl drop-shadow-md">{lastWheelAction}</span>
+             <div className="glass-panel text-white px-4 py-3 rounded-xl text-center font-bold shadow-2xl max-w-[90vw] w-full min-h-[3.5rem] flex items-center justify-center border-t border-l border-white/40">
+                <span className="text-sm md:text-xl drop-shadow-md leading-tight">{lastWheelAction}</span>
              </div>
           </div>
 
-          {/* Puzzle & Score Section (Right on Desktop) */}
-          <div className="flex-1 w-full flex flex-col gap-6">
+          {/* RIGHT: Board, Players, Keyboard (Takes remaining space) */}
+          <div className="flex-1 w-full flex flex-col gap-4 md:gap-8">
             
-            {/* Puzzle Board */}
+            {/* 1. Puzzle Board */}
             <PuzzleBoard puzzle={currentPuzzle} guessedLetters={guessedLetters} />
 
-            {/* Players */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+            {/* 2. Players (Row on all screens now to save vertical space) */}
+            <div className="grid grid-cols-3 gap-2 md:gap-4">
                 {players.map((player, idx) => (
                     <PlayerCard 
                         key={player.id} 
@@ -343,25 +365,29 @@ export default function App() {
                 ))}
             </div>
 
-            {/* Controls / Keyboard */}
-            <div className="mt-4 glass-panel rounded-3xl p-6 shadow-xl">
-                <div className="flex justify-between items-center mb-4 px-2">
-                    <h3 className="font-black text-xl italic text-white drop-shadow-md">TECLADO</h3>
+            {/* 3. Keyboard */}
+            <div className="glass-panel rounded-3xl p-3 md:p-6 shadow-xl">
+                <div className="flex justify-between items-center mb-2 md:mb-4 px-2">
+                    <h3 className="font-black text-sm md:text-xl italic text-white drop-shadow-md">TECLADO</h3>
                     {gamePhase === GamePhase.GUESSING && (
-                        <span className="bg-yellow-400 text-coke-red text-xs font-black px-3 py-1 rounded-full shadow-lg animate-pulse border border-white">SUA VEZ DE ESCOLHER</span>
+                        <span className="bg-yellow-400 text-coke-red text-[10px] md:text-xs font-black px-2 py-1 rounded-full shadow-lg animate-pulse border border-white">SUA VEZ</span>
                     )}
                 </div>
                 <Keyboard 
                     guessedLetters={guessedLetters} 
-                    onGuess={handleGuess} 
+                    onGuess={(l) => {
+                        soundManager.play('CLICK');
+                        handleGuess(l);
+                    }} 
                     disabled={gamePhase !== GamePhase.GUESSING}
                 />
             </div>
             
             {gamePhase === GamePhase.SOLVED && (
-                <div className="text-center animate-bounce mt-4">
+                <div className="text-center animate-bounce mt-2 md:mt-4">
                     <button 
                         onClick={() => {
+                            soundManager.play('CLICK');
                             const currIdx = puzzleQueue.findIndex(p => p.id === currentPuzzle?.id);
                             if (currIdx >= 0 && currIdx < puzzleQueue.length - 1) {
                                 loadPuzzle(puzzleQueue[currIdx+1].id);
@@ -369,7 +395,7 @@ export default function App() {
                                 alert("Fim da fila! Adicione mais no Admin.");
                             }
                         }}
-                        className="bg-white text-coke-red font-black text-2xl px-10 py-5 rounded-full shadow-2xl hover:bg-gray-100 transition-transform hover:scale-105 border-4 border-coke-red ring-4 ring-white/50"
+                        className="bg-white text-coke-red font-black text-lg md:text-2xl px-8 py-4 rounded-full shadow-2xl hover:bg-gray-100 transition-transform hover:scale-105 border-4 border-coke-red ring-4 ring-white/50"
                     >
                         PRÓXIMA PALAVRA
                     </button>
