@@ -30,26 +30,18 @@ export const WheelComponent: React.FC<WheelComponentProps> = ({ onSpinEnd, isSpi
       const randomSegmentIndex = Math.floor(Math.random() * numSegments);
       
       // 2. Calculate current angle normalized (0-360) based on previous total rotation
-      // This accounts for wherever the wheel stopped previously, including random offsets
       const currentRotation = rotation;
       const currentAngle = currentRotation % 360;
 
       // 3. Determine Target Angle
-      // The sector starts at (index * segmentAngle) and ends at ((index+1) * segmentAngle).
-      // The center is in the middle.
       const sectorCenter = (randomSegmentIndex * segmentAngle) + (segmentAngle / 2);
       
-      // To get the sector center to the TOP (0deg), we need to rotate the container 
-      // such that the sectorCenter aligns with 0. 
-      // This effectively means the target visual angle is (360 - sectorCenter).
+      // Target visual angle
       const targetAngle = 360 - sectorCenter;
 
       // 4. Calculate Distance to Travel (Delta)
-      // We want to move clockwise, so we calculate the difference.
       let distance = targetAngle - currentAngle;
       
-      // If distance is negative (e.g., target is 10, current is 350), 
-      // we need to wrap around to ensure positive (clockwise) rotation.
       if (distance < 0) {
         distance += 360;
       }
@@ -58,12 +50,10 @@ export const WheelComponent: React.FC<WheelComponentProps> = ({ onSpinEnd, isSpi
       const extraSpins = 5 * 360; // 5 full rotations
 
       // 6. Add Random Jitter (Safe Zone)
-      // This adds a small offset so it doesn't always land DEAD center of the slice.
       const safeZone = segmentAngle * 0.8; 
       const randomOffset = (Math.random() * safeZone) - (safeZone / 2);
 
       // 7. Compute Final Rotation
-      // New Rotation = Old Total + Full Spins + Distance to Target + Jitter
       const finalRotation = currentRotation + extraSpins + distance + randomOffset;
       
       setRotation(finalRotation);
@@ -117,12 +107,12 @@ export const WheelComponent: React.FC<WheelComponentProps> = ({ onSpinEnd, isSpi
                         className="font-black text-sm md:text-lg tracking-tight select-none"
                         style={{
                             color: sector.textColor,
-                            writingMode: 'vertical-rl', // Makes text run down
+                            writingMode: 'vertical-rl', 
                             textOrientation: 'mixed',
-                            height: '42%', // Occupy outer part of the wheel
+                            height: '42%',
                             display: 'flex',
                             alignItems: 'center', 
-                            justifyContent: 'flex-start', // Start from top
+                            justifyContent: 'flex-start',
                             textShadow: sector.type === WheelSectorType.BANKRUPT ? '0 1px 2px rgba(0,0,0,0.5)' : 'none'
                         }}
                      >
@@ -133,10 +123,13 @@ export const WheelComponent: React.FC<WheelComponentProps> = ({ onSpinEnd, isSpi
           );
         })}
         
-        {/* Decorative Center Cap */}
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-16 h-16 bg-white rounded-full border-4 border-coke-red z-20 flex items-center justify-center shadow-lg">
-            <div className="w-10 h-10 bg-coke-red rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-xs">COCA</span>
+        {/* Bottle Cap Center */}
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20 shadow-2xl">
+            {/* The Cap Shape */}
+            <div className="w-20 h-20 bg-coke-red rounded-full border-[3px] border-dashed border-white flex items-center justify-center shadow-md box-border">
+                 <div className="w-full text-center">
+                    <span className="text-white font-bold text-sm italic tracking-tighter" style={{ fontFamily: 'Georgia, serif' }}>Coca-Cola</span>
+                 </div>
             </div>
         </div>
       </div>

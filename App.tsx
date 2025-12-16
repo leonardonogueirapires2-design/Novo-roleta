@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, RefreshCw, AlertCircle } from 'lucide-react';
-import { INITIAL_PUZZLES, WHEEL_SECTORS } from './constants';
+import { Settings } from 'lucide-react';
+import { INITIAL_PUZZLES } from './constants';
 import { GamePhase, Player, Puzzle, WheelSector, WheelSectorType } from './types';
 
 // Components
@@ -9,6 +9,8 @@ import { PuzzleBoard } from './components/PuzzleBoard';
 import { WheelComponent } from './components/WheelComponent';
 import { Keyboard } from './components/Keyboard';
 import { AdminPanel } from './components/AdminPanel';
+import { GuessWordModal } from './components/GuessWordModal';
+import { TurnNotification, NotificationType } from './components/TurnNotification';
 
 const INITIAL_PLAYERS: Player[] = [
   { id: 1, name: 'Jogador 1', score: 0 },
@@ -31,6 +33,14 @@ export default function App() {
   // UI State
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isWheelSpinning, setIsWheelSpinning] = useState(false);
+  const [isGuessModalOpen, setIsGuessModalOpen] = useState(false);
+  
+  // Notification State
+  const [notification, setNotification] = useState<{ isOpen: boolean; type: NotificationType; message: string }>({ 
+    isOpen: false, 
+    type: null, 
+    message: '' 
+  });
 
   // Initialize
   useEffect(() => {
@@ -50,8 +60,6 @@ export default function App() {
       setGamePhase(GamePhase.SPINNING);
       setLastWheelAction(`Nova rodada: ${puzzle.category}`);
       setCurrentWheelValue(null);
-      // Optional: reset scores or keep them? Roda a Roda keeps them usually until end of show? 
-      // Let's keep them.
     }
   };
 
@@ -78,16 +86,40 @@ export default function App() {
     setIsWheelSpinning(false);
 
     if (sector.type === WheelSectorType.BANKRUPT) {
+      // 1. Reset Score
       setPlayers(prev => prev.map(p => 
         p.id === activePlayer.id ? { ...p, score: 0 } : p
       ));
-      setLastWheelAction('PERDEU TUDO! Passou a vez.');
-      setTimeout(handleNextTurn, 2000);
+      
+      // 2. Show Notification
+      setNotification({
+        isOpen: true,
+        type: 'BANKRUPT',
+        message: `Que pena, ${activePlayer.name}! Você perdeu seus pontos.`
+      });
+
+      // 3. Wait 5s
+      setTimeout(() => {
+        setNotification(prev => ({ ...prev, isOpen: false }));
+        handleNextTurn();
+      }, 5000);
+
     } else if (sector.type === WheelSectorType.PASS) {
-      setLastWheelAction('Passou a vez.');
-      setTimeout(handleNextTurn, 2000);
+      // 1. Show Notification
+      setNotification({
+        isOpen: true,
+        type: 'PASS',
+        message: `A vez passou para o próximo jogador.`
+      });
+
+      // 2. Wait 5s
+      setTimeout(() => {
+         setNotification(prev => ({ ...prev, isOpen: false }));
+         handleNextTurn();
+      }, 5000);
+
     } else {
-      // Points
+      // Points logic (Normal)
       setCurrentWheelValue(sector.value);
       setLastWheelAction(`Valendo ${sector.value}! Escolha uma letra.`);
       setGamePhase(GamePhase.GUESSING);
@@ -119,15 +151,58 @@ export default function App() {
       if (allGuessed) {
         setGamePhase(GamePhase.SOLVED);
         setLastWheelAction(`PARABÉNS! ${activePlayer.name} resolveu a palavra!`);
-        // Maybe bonus?
       } else {
         setGamePhase(GamePhase.SPINNING); // Keep turn
       }
 
     } else {
-      // Incorrect
-      setLastWheelAction(`Letra ${letter} não existe. Passou a vez.`);
-      setTimeout(handleNextTurn, 1500);
+      // Incorrect Letter
+      setLastWheelAction(`Letra ${letter} não existe.`);
+      
+      setNotification({
+        isOpen: true,
+        type: 'WRONG_GUESS',
+        message: `A letra ${letter} não existe na palavra.`
+      });
+
+      setTimeout(() => {
+        setNotification(prev => ({ ...prev, isOpen: false }));
+        handleNextTurn();
+      }, 5000);
+    }
+  };
+
+  // Logic for solving the entire word
+  const handleSolveAttempt = (guess: string) => {
+    setIsGuessModalOpen(false);
+    if (!currentPuzzle) return;
+
+    const normalizedGuess = guess.toUpperCase().trim();
+    const normalizedPhrase = currentPuzzle.phrase.toUpperCase().trim();
+
+    if (normalizedGuess === normalizedPhrase) {
+        // Correct Guess
+        // 1. Reveal all letters
+        const allLetters = new Set(normalizedPhrase.split('').filter(c => /[A-Z]/.test(c)));
+        setGuessedLetters(allLetters);
+        
+        // 2. Set State
+        setGamePhase(GamePhase.SOLVED);
+        setLastWheelAction(`INCRÍVEL! ${activePlayer.name} acertou a palavra inteira!`);
+    } else {
+        // Incorrect Word Guess
+        setLastWheelAction(`"${guess}" está errado!`);
+        
+        setNotification({
+            isOpen: true,
+            type: 'WRONG_GUESS',
+            message: `"${guess}" não é a resposta correta.`
+        });
+
+        setTimeout(() => {
+            setNotification(prev => ({ ...prev, isOpen: false }));
+            handleNextTurn();
+        }, 5000);
     }
   };
 
@@ -171,23 +246,40 @@ export default function App() {
                 disabled={gamePhase !== GamePhase.SPINNING} 
              />
              
-             {/* Spin Button */}
-             <button
-                onClick={handleSpinStart}
-                disabled={gamePhase !== GamePhase.SPINNING || isWheelSpinning}
-                className={`
-                    px-8 py-3 rounded-full font-black text-xl shadow-xl transition-all transform hover:scale-105 active:scale-95 border-4
-                    ${gamePhase === GamePhase.SPINNING && !isWheelSpinning
-                        ? 'bg-yellow-400 text-coke-red border-white hover:bg-yellow-300 cursor-pointer animate-pulse'
-                        : 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed opacity-50'
-                    }
-                `}
-             >
-                {isWheelSpinning ? 'RODANDO...' : 'GIRAR RODA'}
-             </button>
+             <div className="flex flex-col gap-3 w-full max-w-xs">
+                {/* Spin Button */}
+                <button
+                    onClick={handleSpinStart}
+                    disabled={gamePhase !== GamePhase.SPINNING || isWheelSpinning}
+                    className={`
+                        w-full py-3 rounded-full font-black text-xl shadow-xl transition-all transform hover:scale-105 active:scale-95 border-4
+                        ${gamePhase === GamePhase.SPINNING && !isWheelSpinning
+                            ? 'bg-yellow-400 text-coke-red border-white hover:bg-yellow-300 cursor-pointer'
+                            : 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed opacity-50'
+                        }
+                    `}
+                >
+                    {isWheelSpinning ? 'RODANDO...' : 'GIRAR RODA'}
+                </button>
+                
+                {/* Guess Button - Available during Spinning or Guessing phase if not solved */}
+                <button
+                    onClick={() => setIsGuessModalOpen(true)}
+                    disabled={gamePhase === GamePhase.SOLVED || isWheelSpinning}
+                    className={`
+                        w-full py-2 rounded-full font-bold text-sm shadow-md transition-all border-2
+                        ${gamePhase !== GamePhase.SOLVED && !isWheelSpinning
+                             ? 'bg-white text-coke-red border-white hover:bg-gray-100'
+                             : 'bg-black/20 text-white/40 border-transparent cursor-not-allowed'
+                        }
+                    `}
+                >
+                    CHUTAR TUDO
+                </button>
+             </div>
 
              {/* Action Status */}
-             <div className="bg-white/90 text-coke-red px-6 py-2 rounded-xl text-center font-bold shadow-md max-w-xs">
+             <div className="bg-white/90 text-coke-red px-6 py-2 rounded-xl text-center font-bold shadow-md max-w-xs w-full min-h-[3rem] flex items-center justify-center">
                 {lastWheelAction}
              </div>
           </div>
@@ -256,6 +348,21 @@ export default function App() {
         onAddPuzzle={handleAdminAddPuzzle}
         onLoadPuzzle={loadPuzzle}
         onDeletePuzzle={handleAdminDeletePuzzle}
+      />
+
+      {/* Guess Word Overlay */}
+      <GuessWordModal 
+        isOpen={isGuessModalOpen}
+        onClose={() => setIsGuessModalOpen(false)}
+        onConfirm={handleSolveAttempt}
+        category={currentPuzzle?.category || ''}
+      />
+
+      {/* Turn Notification (Bankrupt/Pass) */}
+      <TurnNotification 
+        isOpen={notification.isOpen}
+        type={notification.type}
+        message={notification.message}
       />
     </div>
   );
