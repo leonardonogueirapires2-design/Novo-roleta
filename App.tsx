@@ -213,74 +213,115 @@ export default function App() {
   const handleAdminDeletePuzzle = (id: string) => {
     setPuzzleQueue(prev => prev.filter(p => p.id !== id));
   };
+  
+  const handleAdminClearQueue = () => {
+    setPuzzleQueue([]);
+  };
+
+  const handleStartGameQueue = () => {
+    if (puzzleQueue.length > 0) {
+        loadPuzzle(puzzleQueue[0].id);
+        setIsAdminOpen(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-coke-red text-white font-sans overflow-x-hidden flex flex-col">
-      {/* Header */}
-      <header className="p-4 flex justify-between items-center bg-black/10 backdrop-blur-sm sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-            <div className="bg-white text-coke-red w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl shadow-lg border-2 border-white">
-                R
+    <div className="min-h-screen font-sans overflow-x-hidden flex flex-col relative">
+      {/* Background Bubbles */}
+      <div className="bubbles">
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+        <div className="bubble"></div>
+      </div>
+
+      {/* Header with "Coke Wave" feel */}
+      <header className="relative z-40 bg-coke-darkRed/80 backdrop-blur-md shadow-2xl pt-4 pb-8">
+        <div className="max-w-7xl mx-auto px-4 flex justify-between items-center">
+            <div className="flex items-center gap-4">
+                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-lg border-4 border-gray-200">
+                     {/* Simplified Cap Icon */}
+                    <div className="w-10 h-10 rounded-full border-2 border-dashed border-coke-red bg-coke-red flex items-center justify-center">
+                         <span className="text-white font-serif italic font-bold text-xs">Coke</span>
+                    </div>
+                </div>
+                <div className="flex flex-col">
+                    <h1 className="text-3xl md:text-4xl font-black italic tracking-tighter text-white drop-shadow-md">
+                        RODA COCA-COLA
+                    </h1>
+                    <span className="text-white/80 text-sm font-bold tracking-widest uppercase">Sabor Real. Magia Real.</span>
+                </div>
             </div>
-            <h1 className="text-2xl font-black tracking-tighter italic hidden md:block">RODA COCA-COLA</h1>
+            <button 
+            onClick={() => setIsAdminOpen(true)}
+            className="p-3 bg-black/20 hover:bg-black/40 rounded-full transition-all text-white border border-white/20 shadow-inner"
+            >
+            <Settings size={24} />
+            </button>
         </div>
-        <button 
-          onClick={() => setIsAdminOpen(true)}
-          className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/70 hover:text-white"
-        >
-          <Settings size={24} />
-        </button>
+        
+        {/* The Wave Decoration using SVG or gradient */}
+        <div className="absolute bottom-0 left-0 w-full h-2 bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
       </header>
 
       {/* Main Game Area */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 flex flex-col gap-8">
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 flex flex-col gap-8 relative z-10">
         
         {/* Top Section: Puzzle & Wheel */}
-        <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
+        <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start mt-6">
           
           {/* Wheel Section (Left on Desktop) */}
-          <div className="flex flex-col items-center gap-4">
-             <WheelComponent 
-                onSpinEnd={handleSpinEnd} 
-                isSpinning={isWheelSpinning}
-                disabled={gamePhase !== GamePhase.SPINNING} 
-             />
+          <div className="flex flex-col items-center gap-6">
+             {/* Wheel Container with specific glass effect */}
+             <div className="relative">
+                 <WheelComponent 
+                    onSpinEnd={handleSpinEnd} 
+                    isSpinning={isWheelSpinning}
+                    disabled={gamePhase !== GamePhase.SPINNING} 
+                 />
+             </div>
              
-             <div className="flex flex-col gap-3 w-full max-w-xs">
+             <div className="flex flex-col gap-3 w-full max-w-xs relative z-20">
                 {/* Spin Button */}
                 <button
                     onClick={handleSpinStart}
                     disabled={gamePhase !== GamePhase.SPINNING || isWheelSpinning}
                     className={`
-                        w-full py-3 rounded-full font-black text-xl shadow-xl transition-all transform hover:scale-105 active:scale-95 border-4
+                        w-full py-4 rounded-full font-black text-2xl shadow-xl transition-all transform hover:scale-105 active:scale-95 border-4
                         ${gamePhase === GamePhase.SPINNING && !isWheelSpinning
-                            ? 'bg-yellow-400 text-coke-red border-white hover:bg-yellow-300 cursor-pointer'
-                            : 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed opacity-50'
+                            ? 'bg-yellow-400 text-coke-red border-white hover:bg-yellow-300 cursor-pointer ring-4 ring-yellow-500/30'
+                            : 'bg-gray-800 text-gray-500 border-gray-600 cursor-not-allowed opacity-50 grayscale'
                         }
                     `}
                 >
-                    {isWheelSpinning ? 'RODANDO...' : 'GIRAR RODA'}
+                    {isWheelSpinning ? 'GIRANDO...' : 'GIRAR'}
                 </button>
                 
-                {/* Guess Button - Available during Spinning or Guessing phase if not solved */}
+                {/* Guess Button */}
                 <button
                     onClick={() => setIsGuessModalOpen(true)}
                     disabled={gamePhase === GamePhase.SOLVED || isWheelSpinning}
                     className={`
-                        w-full py-2 rounded-full font-bold text-sm shadow-md transition-all border-2
+                        w-full py-3 rounded-full font-bold text-sm shadow-lg transition-all border-2 backdrop-blur-sm
                         ${gamePhase !== GamePhase.SOLVED && !isWheelSpinning
-                             ? 'bg-white text-coke-red border-white hover:bg-gray-100'
-                             : 'bg-black/20 text-white/40 border-transparent cursor-not-allowed'
+                             ? 'bg-white/90 text-coke-red border-white hover:bg-white'
+                             : 'bg-black/20 text-white/40 border-white/10 cursor-not-allowed'
                         }
                     `}
                 >
-                    CHUTAR TUDO
+                    CHUTAR PALAVRA COMPLETA
                 </button>
              </div>
 
-             {/* Action Status */}
-             <div className="bg-white/90 text-coke-red px-6 py-2 rounded-xl text-center font-bold shadow-md max-w-xs w-full min-h-[3rem] flex items-center justify-center">
-                {lastWheelAction}
+             {/* Action Status Panel (Glass) */}
+             <div className="glass-panel text-white px-8 py-4 rounded-2xl text-center font-bold shadow-2xl max-w-md w-full min-h-[4rem] flex items-center justify-center border-t border-l border-white/40">
+                <span className="text-xl drop-shadow-md">{lastWheelAction}</span>
              </div>
           </div>
 
@@ -291,7 +332,7 @@ export default function App() {
             <PuzzleBoard puzzle={currentPuzzle} guessedLetters={guessedLetters} />
 
             {/* Players */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                 {players.map((player, idx) => (
                     <PlayerCard 
                         key={player.id} 
@@ -303,11 +344,11 @@ export default function App() {
             </div>
 
             {/* Controls / Keyboard */}
-            <div className="mt-4 bg-black/10 rounded-3xl p-4 md:p-6 backdrop-blur-md">
+            <div className="mt-4 glass-panel rounded-3xl p-6 shadow-xl">
                 <div className="flex justify-between items-center mb-4 px-2">
-                    <h3 className="font-bold text-white/80">TECLADO</h3>
+                    <h3 className="font-black text-xl italic text-white drop-shadow-md">TECLADO</h3>
                     {gamePhase === GamePhase.GUESSING && (
-                        <span className="bg-yellow-400 text-coke-red text-xs font-bold px-2 py-1 rounded">ESCOLHA UMA LETRA</span>
+                        <span className="bg-yellow-400 text-coke-red text-xs font-black px-3 py-1 rounded-full shadow-lg animate-pulse border border-white">SUA VEZ DE ESCOLHER</span>
                     )}
                 </div>
                 <Keyboard 
@@ -318,10 +359,9 @@ export default function App() {
             </div>
             
             {gamePhase === GamePhase.SOLVED && (
-                <div className="text-center animate-bounce">
+                <div className="text-center animate-bounce mt-4">
                     <button 
                         onClick={() => {
-                            // Find next puzzle index
                             const currIdx = puzzleQueue.findIndex(p => p.id === currentPuzzle?.id);
                             if (currIdx >= 0 && currIdx < puzzleQueue.length - 1) {
                                 loadPuzzle(puzzleQueue[currIdx+1].id);
@@ -329,7 +369,7 @@ export default function App() {
                                 alert("Fim da fila! Adicione mais no Admin.");
                             }
                         }}
-                        className="bg-white text-coke-red font-black text-2xl px-8 py-4 rounded-full shadow-2xl hover:bg-gray-100 transition-transform"
+                        className="bg-white text-coke-red font-black text-2xl px-10 py-5 rounded-full shadow-2xl hover:bg-gray-100 transition-transform hover:scale-105 border-4 border-coke-red ring-4 ring-white/50"
                     >
                         PRÓXIMA PALAVRA
                     </button>
@@ -348,6 +388,8 @@ export default function App() {
         onAddPuzzle={handleAdminAddPuzzle}
         onLoadPuzzle={loadPuzzle}
         onDeletePuzzle={handleAdminDeletePuzzle}
+        onClearQueue={handleAdminClearQueue}
+        onStartGame={handleStartGameQueue}
       />
 
       {/* Guess Word Overlay */}
