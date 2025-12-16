@@ -1,6 +1,6 @@
 import React from 'react';
 import { Player } from '../types';
-import { User, Plus, Minus } from 'lucide-react';
+import { User } from 'lucide-react';
 
 interface PlayerCardProps {
   player: Player;
@@ -8,7 +8,7 @@ interface PlayerCardProps {
   onUpdateScore: (id: number, delta: number) => void;
 }
 
-export const PlayerCard: React.FC<PlayerCardProps> = ({ player, isActive, onUpdateScore }) => {
+export const PlayerCard: React.FC<PlayerCardProps> = ({ player, isActive }) => {
   return (
     <div 
       className={`
@@ -26,23 +26,6 @@ export const PlayerCard: React.FC<PlayerCardProps> = ({ player, isActive, onUpda
       
       <div className="text-3xl font-black text-coke-black mb-4 font-mono">
         {player.score}
-      </div>
-
-      <div className="flex gap-2">
-        <button 
-          onClick={() => onUpdateScore(player.id, -100)}
-          className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 text-gray-700 transition-colors"
-          title="-100"
-        >
-          <Minus size={16} />
-        </button>
-        <button 
-          onClick={() => onUpdateScore(player.id, 100)}
-          className="p-1 rounded-full bg-coke-red hover:bg-red-700 text-white transition-colors"
-          title="+100"
-        >
-          <Plus size={16} />
-        </button>
       </div>
 
       {isActive && (
